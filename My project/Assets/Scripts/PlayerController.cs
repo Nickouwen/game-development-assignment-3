@@ -3,8 +3,10 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] private Rigidbody playerRigidBody;
-    [SerializeField] float playerSpeed = 2000;
-    [SerializeField] float jumpHeight = 10;
+    [SerializeField] float playerSpeed = 50;
+    [SerializeField] float maxSpeed = 10;
+    [SerializeField] float jumpHeight = 20;
+    [SerializeField] float dashForce = 500;
     [SerializeField] bool onGround = true;
     [SerializeField] bool canJump = true;
 
@@ -16,26 +18,44 @@ public class PlayerController : MonoBehaviour
     public void MovePlayer(Vector3 input)
     {
         Vector3 inputXZPlane = new Vector3(input.x, 0, input.z).normalized;
-        if (onGround)
+        playerRigidBody.AddForce(transform.forward * inputXZPlane.z * playerSpeed);
+        playerRigidBody.AddForce(transform.right * inputXZPlane.x * playerSpeed);
+
+        if (input.magnitude < 0.01f)
         {
-            canJump = true;
-            inputXZPlane.y = input.y * jumpHeight;
-        } else if (input.y > 0)
-        {
-            if (canJump)
-            {
-                inputXZPlane.y = input.y * jumpHeight;
-                canJump = false;
-            }
+            // I did this instead of the physics so it would decelerate correctly in the air. I was getting funky results where the player would go super speed when moving in the air.
+            // I guess in hindsight I could've made no inputs work in the air and made it so the player was stuck jumping in one direction, but I did not do that.
+            playerRigidBody.AddForce(new Vector3(-playerRigidBody.linearVelocity.x, 0, -playerRigidBody.linearVelocity.z) * 5, ForceMode.Acceleration);
         }
-        playerRigidBody.AddForce(transform.forward * inputXZPlane.z * playerSpeed * Time.deltaTime);
-        playerRigidBody.AddForce(transform.right * inputXZPlane.x * playerSpeed * Time.deltaTime);
-        playerRigidBody.AddForce(transform.up * inputXZPlane.y * playerSpeed * Time.deltaTime, ForceMode.Impulse);
+
+        if (playerRigidBody.linearVelocity.magnitude > maxSpeed)
+        {
+            playerRigidBody.linearVelocity = playerRigidBody.linearVelocity.normalized * maxSpeed;
+        }
     }
 
     public void RotatePlayer(float input)
     {
         transform.Rotate(Vector3.up * input);
+    }
+
+    public void Jump()
+    {
+        if (onGround)
+        {
+            playerRigidBody.AddForce(transform.up * jumpHeight, ForceMode.Impulse);
+            canJump = true;
+        }
+        else if (canJump)
+        {
+            playerRigidBody.AddForce(transform.up * jumpHeight, ForceMode.Impulse);
+            canJump = false;
+        }
+    }
+
+    public void Dash()
+    {
+        playerRigidBody.AddForce(transform.forward * dashForce, ForceMode.Impulse);
     }
 
     private void OnCollisionEnter(Collision collision)
