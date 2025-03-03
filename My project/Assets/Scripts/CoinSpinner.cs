@@ -15,4 +15,13 @@ public class CoinSpinner : MonoBehaviour
     {
         transform.Rotate(0, spinRate * Time.deltaTime, 0);
     }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.collider.gameObject.tag.Equals("Player"))
+        {
+            GameManager.instance.AddScore(1);
+            Destroy(coin.gameObject);
+        }
+    }
 }
