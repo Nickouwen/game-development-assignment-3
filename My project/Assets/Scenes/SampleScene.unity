@@ -1062,7 +1062,7 @@ MonoBehaviour:
   playerSpeed: 50
   maxSpeed: 10
   jumpHeight: 20
-  dashForce: 500
+  dashForce: 750
   onGround: 1
   canJump: 1
 --- !u!1 &832575517
